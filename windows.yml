@@ -1,0 +1,88 @@
+# ex: set filetype=yaml fenc=utf-8 expandtab ts=2 sw=2 :
+## vimf6_ansible_args: --diff --check
+## vimf6_ansible_args: --diff --check -vv
+## vimf6_ansible_nolocalsudo: yes
+## vimf6_ansible_nolocalsudo: no
+- hosts: all
+  #connection: local
+  #become: true
+  vars:
+    #ansible_connection: winrm
+    ansible_winrm_scheme: http
+    #ansible_winrm_transport: basic
+    ansible_winrm_transport: ntlm
+    #ansible_connection: winrm
+    ansible_user: vagrant
+    ansible_password: vagrant
+    #ansible_winrm_server_cert_validation: ignore
+    #become: yes
+    #become_flags: logon_flags=
+  tasks:
+    - name: Example from an Ansible Playbook
+      win_ping:
+
+    - name: install Chocolatey
+      win_chocolatey:
+        name: chocolatey
+        state: present
+
+    - name: disable enhanced exit codes, see https://github.com/ansible/ansible/issues/53971#issuecomment-474047195
+      win_chocolatey_feature:
+        name: useEnhancedExitCodes
+        state: disabled
+
+    - name: Install git
+      win_chocolatey:
+        name: git
+        state: present
+      when: false
+
+    - name: Install programmer-dvorak
+      win_chocolatey:
+        name: programmer-dvorak
+        state: present
+
+    - name: Change keyboard layout via powershell
+      win_shell: |
+        $languageList = New-WinUserLanguageList en-US
+        $languageList[0].InputMethodTips.Clear()
+        $languageList[0].InputMethodTips.Add('0409:19360409')
+        Set-WinUserLanguageList $languageList -Force
+        Get-WinUserLanguageList
+      tags:
+      - hehe
+      when: true
+      register: hehe
+
+    - debug:
+        var: hehe
+
+    - name: Change keyboard layout via powershell
+      win_shell: |
+        $RegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+        $DefaultUsername = "vagrant"
+        $DefaultPassword = "vagrant"
+        Set-ItemProperty $RegPath "AutoAdminLogon" -Value "1" -type String
+        Set-ItemProperty $RegPath "DefaultUsername" -Value "$DefaultUsername" -type String
+        Set-ItemProperty $RegPath "DefaultPassword" -Value "$DefaultPassword" -type String
+      tags:
+      - hehe3
+
+    - name: reboot
+      win_reboot:
+      tags:
+      - hehe4
+
+    - name: Change keyboard layout via powershell
+      win_shell: |
+        Install-Module -Name DSCR_KeyboardLayout -SkipPublisherCheck
+      tags:
+      - hehe2
+      when: false
+
+    - name: Change keyboard layout via powershell
+      win_shell: |
+        Set-KeyboardLayout  -KeyboardLayoutId "0409:19360409" -ClearExist
+      tags:
+      - hehe2
+      when: false
